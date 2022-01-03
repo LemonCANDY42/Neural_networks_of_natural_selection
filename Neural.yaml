@@ -141,8 +141,10 @@ dependencies:
   - zstd=1.5.1=h6255e5f_0
   - pip:
     - docopt==0.6.2
+    - line-profiler==3.4.0
     - llvmlite==0.36.0
     - numba==0.53.0
     - pqi==2.0.6
+    - pygame==2.1.2
     - pylab==0.0.1
 prefix: C:\Users\LWRF4\anaconda3\envs\Neural
