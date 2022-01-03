@@ -16,7 +16,6 @@ def func_line_time(f):
     return decorator 
 
 def time_keep(func):
-    
     def time_ke(*args, **kwargs):
         start_time = time.time()
         output = func(*args, **kwargs)
@@ -27,4 +26,9 @@ def time_keep(func):
 
 
 if __name__ == "__main__":
-    pass
+    @time_keep
+    def test():
+        time.sleep(2.5)
+
+    test()
+
