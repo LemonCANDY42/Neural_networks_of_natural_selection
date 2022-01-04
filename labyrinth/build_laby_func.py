@@ -54,7 +54,8 @@ def build_twist(num_rows, num_cols):  # 扭曲迷宫
                 r = r + 1
                 m[r, c, 1] = 1
     m[0, 0, 0] = 1
-    m[num_rows - 1, num_cols - 1, 2] = 1
+    # # 右下角的右边通路
+    # m[num_rows - 1, num_cols - 1, 2] = 1
     return m
 
 def build_tortuous(num_rows, num_cols):  # 曲折迷宫

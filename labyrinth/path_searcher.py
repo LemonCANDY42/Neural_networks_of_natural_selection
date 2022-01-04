@@ -1,6 +1,6 @@
 import random
 
-def solve_fill(num_rows, num_cols, m):  # 填坑法
+def solve_fill(num_rows, num_cols, m, object_map=None):  # 填坑法
     map_arr = m.copy()	# 拷贝一份迷宫来填坑
     map_arr[0, 0, 0] = 0
     map_arr[num_rows-1, num_cols-1, 2] = 0
@@ -9,8 +9,12 @@ def solve_fill(num_rows, num_cols, m):  # 填坑法
     r, c = (0, 0)
     attempted_steps = 0
     while True:
-        if (r == num_rows-1) and (c == num_cols-1):
-            break
+        if object_map is None:
+            if (r == num_rows-1) and (c == num_cols-1):
+                break
+        else:
+            if object_map[r,c] == 1:
+                break
         attempted_steps += 1
         xy_list.append((r, c))
         wall = map_arr[r, c]

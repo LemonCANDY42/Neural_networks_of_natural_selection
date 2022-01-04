@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from build_laby_func import *
 from path_searcher import *
+from orange_object.generator import object_generator
 
 class Labyrinth:
     """
@@ -18,6 +19,8 @@ class Labyrinth:
     def __init__(self,num_rows,num_cols,type):
         self.num_rows = num_rows
         self.num_cols = num_cols
+        self.shape = (self.num_rows,self.num_cols)
+        self.object_map = object_generator(self.shape)
         self.image = np.zeros((self.num_rows * 10, self.num_cols * 10), dtype=np.uint8)
         if type == 'twist':
             self.build = build_twist
@@ -43,7 +46,7 @@ class Labyrinth:
         self.map_fig.savefig('./img/map.png', format='png', transparent=True, dpi=300, pad_inches=0)
 
     def draw_path(self):
-        move_list,attempted_steps = solve_fill(self.num_rows, self.num_cols, self.map)
+        move_list,attempted_steps = solve_fill(self.num_rows, self.num_cols, self.map,object_map=self.object_map)
         step = len(move_list)
         print(f"总步数：{step},尝试次数：{attempted_steps}")
         self.path_image = self.find_path(move_list)
@@ -59,7 +62,6 @@ class Labyrinth:
     def save_path(self):
         self.path_fig.savefig('./img/path.png', format='png', transparent=True, dpi=300, pad_inches=0)
 
-      
     def draw(self, m):
         """
             绘制迷宫
@@ -74,15 +76,19 @@ class Labyrinth:
                 for i in range(10 * row + 2, 10 * row + 8):
                     self.image[i, range(10 * col + 2, 10 * col + 8)] = 255
                 if cell_data[0] == 1:
+                    # 左
                     self.image[range(10 * row + 2, 10 * row + 8), 10 * col] = 255
                     self.image[range(10 * row + 2, 10 * row + 8), 10 * col + 1] = 255
                 if cell_data[1] == 1:
+                    # 上
                     self.image[10 * row, range(10 * col + 2, 10 * col + 8)] = 255
                     self.image[10 * row + 1, range(10 * col + 2, 10 * col + 8)] = 255
                 if cell_data[2] == 1:
+                    # 右
                     self.image[range(10 * row + 2, 10 * row + 8), 10 * col + 9] = 255
                     self.image[range(10 * row + 2, 10 * row + 8), 10 * col + 8] = 255
                 if cell_data[3] == 1:
+                    # 下
                     self.image[10 * row + 9, range(10 * col + 2, 10 * col + 8)] = 255
                     self.image[10 * row + 8, range(10 * col + 2, 10 * col + 8)] = 255
         return self.image
@@ -140,17 +146,18 @@ class Labyrinth:
                 col = col + 1
             elif go == 'D':
                 row = row + 1
-        path_image[range(10 * row + 2, 10 * row + 8), 10 * col + 9] = 127
-        path_image[range(10 * row + 2, 10 * row + 8), 10 * col + 8] = 127
+        for i in range(6):
+            path_image[range(10 * row + 2, 10 * row + 8), 10 * col + i+ 2] = 200
+        # path_image[range(10 * row + 2, 10 * row + 16), 10 * col + 8] = 200
         return path_image
 
 
 if __name__ == "__main__":
     # rows = int(input("Rows: "))
     # cols = int(input("Columns: "))
-    rows = 32
-    cols = 32
-    MG = Labyrinth(num_rows=rows,num_cols=cols,type="twist")
+    rows = 64
+    cols = 64
+    MG = Labyrinth(num_rows=rows,num_cols=cols,type="twistN")
 
     MG.draw_map()
     MG.show()
