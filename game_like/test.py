@@ -12,7 +12,7 @@ m=maze()
 # m=maze(20,30)
 # m.CreateMaze()
 # m.CreateMaze(5,5,pattern='v',theme=COLOR.light)
-m.CreateMaze(loopPercent=100)
+m.CreateMaze(loopPercent=100,saveMaze=True)
 
 # a=agent(m,5,4)
 # print(a.x)
@@ -36,5 +36,7 @@ path3='WWNNES'
 # l1=textLabel(m,'Total Cells',m.rows*m.cols)
 
 m.tracePath({a:m.path,b:path2,c:path3},delay=200,kill=True)
+
+print(m.grid)
 
 m.run()
