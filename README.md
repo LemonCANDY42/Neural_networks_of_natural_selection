@@ -10,5 +10,4 @@
       conda env export > Neural.yaml
 
    2. 导入
-
-      conda env create -f Neural.yaml
+      conda env create -f Neural.yaml python=3.9
