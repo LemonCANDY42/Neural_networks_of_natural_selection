@@ -9,6 +9,8 @@ from matplotlib import pyplot as plt
 from build_laby_func import *
 from path_searcher import *
 from orange_object.generator import object_generator
+from analysis.time_tools import time_keep
+from numba import jit
 
 class Labyrinth:
     """
@@ -36,8 +38,8 @@ class Labyrinth:
         self.map = self.build(self.num_rows, self.num_cols)
 
     def draw_map(self):
-        self.draw(self.map)
-        plt.imshow(self.image, cmap='gray')
+        self.draw(self.map,object_map=self.object_map)
+        plt.imshow(self.image, cmap='hot')
         self.map_fig = plt.gcf()
         self.map_fig.set_size_inches(cols / 10 / 3, rows / 10 / 3)
         plt.gca().xaxis.set_major_locator(plt.NullLocator())
@@ -68,7 +70,7 @@ class Labyrinth:
     def save_path(self):
         self.path_fig.savefig('./img/path.png', format='png', transparent=True, dpi=300, pad_inches=0)
 
-    def draw(self, m):
+    def draw(self, m, object_map=None):
         """
             绘制迷宫
         :param m:
@@ -97,6 +99,12 @@ class Labyrinth:
                     # 下
                     self.image[10 * row + 9, range(10 * col + 2, 10 * col + 8)] = 255
                     self.image[10 * row + 8, range(10 * col + 2, 10 * col + 8)] = 255
+        if object_map is not None:
+            a = np.argwhere(object_map == 1)
+            if len(a):
+                row,col = a[0]
+                for i in range(6):
+                    self.image[range(10 * row + 2, 10 * row + 8), 10 * col + i + 2] = 127
         return self.image
 
     def find_path(self, move_list):
@@ -161,8 +169,8 @@ class Labyrinth:
 if __name__ == "__main__":
     # rows = int(input("Rows: "))
     # cols = int(input("Columns: "))
-    rows = 64
-    cols = 64
+    rows = 128
+    cols = 128
     MG = Labyrinth(num_rows=rows,num_cols=cols,type="twistN")
 
     MG.draw_map()
