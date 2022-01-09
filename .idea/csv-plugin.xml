@@ -10,6 +10,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/game_like/maze--2022-01-10--00-38-31.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
       </map>
     </option>
   </component>

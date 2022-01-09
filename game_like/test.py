@@ -16,7 +16,7 @@ m=maze(32,32)
 #By default, the generated maze is Perfect Maze meaning just the one path from any cell to the goal cell.
 # However, we can generate a maze with multiple paths by setting the optional argument loopPercent to some positive number.
 # loopPercent set to highest value 100 means the maze generation algorithm will maximize the number of multiple paths for example as: m.CreateMaze(loopPercent=100)
-m.CreateMaze(loopPercent=2,saveMaze=True)#loopPercent=100
+m.CreateMaze(saveMaze=True)#loopPercent=100
 
 # a=agent(m,5,4)
 # print(a.x)
@@ -24,7 +24,7 @@ m.CreateMaze(loopPercent=2,saveMaze=True)#loopPercent=100
 # print(a.position)
 
 
-a=agent(m,footprints=True,filled=True)
+a=agent(m,15,15,footprints=True,filled=True,)
 b=agent(m,5,5,footprints=True,color='red')
 # c=agent(m,4,1,footprints=True,color='green',shape='arrow')
 
