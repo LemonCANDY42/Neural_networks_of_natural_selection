@@ -7,15 +7,47 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from build_laby_func import *
+from setting import COLOR
 from path_searcher import *
 from orange_object.generator import object_generator
 from analysis.time_tools import time_keep
 from numba import jit
+import random,datetime,csv,os
+from tkinter import *
 
-class Labyrinth:
+class textLabel:
+    '''
+    This class is to create Text Label to show different results on the window.
+    '''
+    def __init__(self,parentMaze,title,value):
+        '''
+        parentmaze-->   The maze on which Label will be displayed.
+        title-->        The title of the value to be displayed
+        value-->        The value to be displayed
+        '''
+        self.title=title
+        self._value=value
+        self._parentMaze=parentMaze
+        # self._parentMaze._labels.append(self)
+        self._var=None
+        self.drawLabel()
+    @property
+    def value(self):
+        return self._value
+    @value.setter
+    def value(self,v):
+        self._value=v
+        self._var.set(f'{self.title} : {v}')
+    def drawLabel(self):
+        self._var = StringVar()
+        self.lab = Label(self._parentMaze._canvas, textvariable=self._var, bg="white", fg="black",font=('Helvetica bold',12),relief=RIDGE)
+        self._var.set(f'{self.title} : {self.value}')
+        self.lab.pack(expand = True,side=LEFT,anchor=NW)
+
+class Maze:
     """
         map的结构:
-        [num_rows,num_cols,5]
+        [rows,cols,5]
         最后一个维度表示:
         为1代表可以走
                 1 ↑
@@ -23,19 +55,30 @@ class Labyrinth:
                 3 ↓
         4 表示已经遍历
 
+        _agents-->  A list of aganets on the maze
+
     """
     def __init__(self,num_rows,num_cols,type):
-        self.num_rows = num_rows
-        self.num_cols = num_cols
-        self.shape = (self.num_rows,self.num_cols)
-        self.object_map = object_generator(self.shape)
-        self.image = np.zeros((self.num_rows * 10, self.num_cols * 10), dtype=np.uint8)
+        self._win=None
+        self._canvas=None
+        self._agents = []
+
+        self.rows = num_rows
+        self.cols = num_cols
+
+        self.shape = (self.rows, self.cols)
+        self.object_map,object_row,object_col = object_generator(self.shape)
+        self._goal = (object_row, object_col)
+
+        self.image = np.zeros((self.rows * 10, self.cols * 10), dtype=np.uint8)
         if type == 'twist':
             self.build = build_twist
         else:
             self.build = build_tortuous
 
-        self.map = self.build(self.num_rows, self.num_cols)
+        self.map = self.build(self.rows, self.cols)
+
+        self._create_win()
 
     def draw_map(self):
         self.draw(self.map,object_map=self.object_map)
@@ -54,7 +97,7 @@ class Labyrinth:
         self.map_fig.savefig('./img/map.png', format='png', transparent=True, dpi=300, pad_inches=0)
 
     def draw_path(self):
-        move_list,attempted_steps = solve_fill(self.num_rows, self.num_cols, self.map,object_map=self.object_map)
+        move_list,attempted_steps = solve_fill(self.rows, self.cols, self.map, object_map=self.object_map)
         step = len(move_list)
         print(f"总步数：{step},尝试次数：{attempted_steps}")
         self.path_image = self.find_path(move_list)
@@ -78,8 +121,8 @@ class Labyrinth:
         :return:
         :rtype:
         """
-        for row in range(0, self.num_rows):
-            for col in range(0, self.num_cols):
+        for row in range(0, self.rows):
+            for col in range(0, self.cols):
                 cell_data = m[row, col]
                 for i in range(10 * row + 2, 10 * row + 8):
                     self.image[i, range(10 * col + 2, 10 * col + 8)] = 255
@@ -165,13 +208,123 @@ class Labyrinth:
         # path_image[range(10 * row + 2, 10 * row + 16), 10 * col + 8] = 200
         return path_image
 
+    def _create_win(self,theme=COLOR.dark):
+        if(isinstance(theme,str)):
+            if(theme in COLOR.__members__):
+                self.theme=COLOR[theme]
+            else:
+                raise ValueError(f'{theme} is not a valid theme COLOR!')
+
+        self.theme=theme
+        self._drawMaze(theme=self.theme)
+
+    def _drawMaze(self, theme):
+        '''
+        Creation of Tkinter window and maze lines
+        '''
+
+        self._LabWidth = 26  # Space from the top for Labels
+        self._win = Tk()
+        self._win.state('zoomed')
+        self._win.title('MAZE WORLD by Kenny')
+
+        scr_width = self._win.winfo_screenwidth()
+        scr_height = self._win.winfo_screenheight()
+        self._win.geometry(f"{scr_width}x{scr_height}+0+0")
+        self._canvas = Canvas(width=scr_width, height=scr_height, bg=theme.value[0])  # 0,0 is top left corner
+        self._canvas.pack(expand=YES, fill=BOTH)
+        # Some calculations for calculating the width of the maze cell
+        k = 3.25
+        if self.rows >= 95 and self.cols >= 95:
+            k = 0
+        elif self.rows >= 80 and self.cols >= 80:
+            k = 1
+        elif self.rows >= 70 and self.cols >= 70:
+            k = 1.5
+        elif self.rows >= 50 and self.cols >= 50:
+            k = 2
+        elif self.rows >= 35 and self.cols >= 35:
+            k = 2.5
+        elif self.rows >= 22 and self .cols >= 22:
+            k = 3
+        self._cell_width = round(min(((scr_height - self.rows - k * self._LabWidth) / (self.rows)),
+                                     ((scr_width - self.cols - k * self._LabWidth) / (self.cols)), 90), 3)
+
+        # Creating Maze lines
+        if self._win is not None:
+            if self.map is not None:
+                for row in range(self.rows):
+                    for col in range(self.cols):
+                        w = self._cell_width
+                        x = col
+                        y = row
+                        x+=1
+                        y+=1
+                        x = x * w - w + self._LabWidth
+                        y = y * w - w + self._LabWidth
+                        if self.map[col][row][2] == 0:
+                            l = self._canvas.create_line(y + w, x, y + w, x + w, width=2, fill=theme.value[1], tag='line')
+                        if self.map[col][row][0] == 0:
+                            l = self._canvas.create_line(y, x, y, x + w, width=2, fill=theme.value[1], tag='line')
+                        if self.map[col][row][1] == 0:
+                            l = self._canvas.create_line(y, x, y + w, x, width=2, fill=theme.value[1], tag='line')
+                        if self.map[col][row][3] == 0:
+                            l = self._canvas.create_line(y, x + w, y + w, x + w, width=2, fill=theme.value[1], tag='line')
+
+    def _redrawCell(self, x, y, theme):
+        '''
+        To redraw a cell.
+        With Full sized square agent, it can overlap with maze lines
+        So the cell is redrawn so that cell lines are on top
+        '''
+        w = self._cell_width
+        cell = (x-1, y-1)
+        x = x * w - w + self._LabWidth
+        y = y * w - w + self._LabWidth
+        if self.map[cell][2] == 0:
+            self._canvas.create_line(y + w, x, y + w, x + w,width=2,fill=theme.value[1])
+        if self.map[cell][0] == 0:
+            self._canvas.create_line(y, x, y, x + w,width=2,fill=theme.value[1])
+        if self.map[cell][1] == 0:
+            self._canvas.create_line(y, x, y + w, x,width=2,fill=theme.value[1])
+        if self.map[cell][3] == 0:
+            self._canvas.create_line(y, x + w, y + w, x + w,width=2,fill=theme.value[1])
+
+    def enableArrowKey(self, a):
+        '''
+        To control an agent a with Arrow Keys
+        '''
+        self._win.bind('<Left>', a.moveLeft)
+        self._win.bind('<Right>', a.moveRight)
+        self._win.bind('<Up>', a.moveUp)
+        self._win.bind('<Down>', a.moveDown)
+
+    def enableWASD(self, a):
+        '''
+        To control an agent a with keys W,A,S,D
+        '''
+        self._win.bind('<a>', a.moveLeft)
+        self._win.bind('<d>', a.moveRight)
+        self._win.bind('<w>', a.moveUp)
+        self._win.bind('<s>', a.moveDown)
+
+    def run(self):
+        '''
+        Finally to run the Tkinter Main Loop
+        '''
+        self._win.mainloop()
 
 if __name__ == "__main__":
+    from agent import Agent
     # rows = int(input("Rows: "))
     # cols = int(input("Columns: "))
-    rows = 128
-    cols = 128
-    MG = Labyrinth(num_rows=rows,num_cols=cols,type="twistN")
+    rows = 5
+    cols = 5
+    MG = Maze(num_rows=rows, num_cols=cols, type="twistN")
+
+    b = Agent(MG, footprints=True, filled=True,)
+    MG.enableArrowKey(b)
+    MG.enableWASD(b)
 
     MG.draw_map()
     MG.show()
@@ -179,6 +332,5 @@ if __name__ == "__main__":
     MG.show()
     MG.save_map()
     MG.save_path()
+    MG.run()
     a = MG.map
-    b = MG.move_list
-

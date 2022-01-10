@@ -8,7 +8,7 @@
 # https://github.com/MAN1986/pyamaze/raw/main/Demos/demo.py
 
 from pyamaze import maze,COLOR,agent
-m=maze(32,32)
+m=maze(64,32)
 # m=maze(20,30)
 # m.CreateMaze()
 # m.CreateMaze(5,5,pattern='v',theme=COLOR.light)
@@ -39,6 +39,6 @@ path3='WWNNES'
 # l1=textLabel(m,'Total Cells',m.rows*m.cols)
 # l1=textLabel(m,'Total Cells',m.rows*m.cols)
 
-m.tracePath({a:m.path,},delay=200,kill=True)#,b:path2,c:path3
+# m.tracePath({a:m.path,},delay=200,kill=True)#,b:path2,c:path3
 
 m.run()
