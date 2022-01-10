@@ -125,10 +125,10 @@ class Maze:
         self.path_fig.savefig(dir_path+f'{datetime.datetime.now()}-path.png', format='png', transparent=True, dpi=300, pad_inches=0)
 
     def draw_path(self):
-        move_list,attempted_steps = solve_fill(self.rows, self.cols, self.map, object_map=self.object_map)
-        step = len(move_list)
+        self.move_list,attempted_steps = solve_fill(self.rows, self.cols, self.map, object_map=self.object_map)
+        step = len(self.move_list)
         print(f"总步数：{step},尝试次数：{attempted_steps}")
-        self.path_image = self.find_path(move_list)
+        self.path_image = self.find_path()
 
         plt.imshow(self.path_image, cmap='hot')
         self.path_fig = plt.gcf()
@@ -175,7 +175,7 @@ class Maze:
                     self.image[range(10 * row + 2, 10 * row + 8), 10 * col + i + 2] = 127
         return self.image
 
-    def find_path(self, move_list):
+    def find_path(self):
         """
             绘制路径
         :param move_list:
@@ -183,7 +183,7 @@ class Maze:
         :return:
         :rtype:
         """
-        self.move_list = move_list
+        move_list = self.move_list
         row, col = (0, 0)
         path_image = self.image.copy()
         path_image[range(10 * row + 2, 10 * row + 8), 10 * col] = 127
@@ -339,10 +339,10 @@ class Maze:
         '''
         To control an agent a with keys W,A,S,D
         '''
-        self._win.bind('<L>', a.moveLeft)
-        self._win.bind('<R>', a.moveRight)
-        self._win.bind('<U>', a.moveUp)
-        self._win.bind('<D>', a.moveDown)
+        self._win.bind('L', a.moveLeft)
+        self._win.bind('R', a.moveRight)
+        self._win.bind('U', a.moveUp)
+        self._win.bind('D', a.moveDown)
 
     def randomMove(self):
         """
@@ -350,7 +350,8 @@ class Maze:
         :return:
         :rtype:
         """
-        action = random.choice(['<L>','<R>','<U>','<D>'])
+        action = random.choice(['L','R','U','D'])
+        # for action in self.move_list:
         self._win.event_generate(action)  # 发送自定义事件myEvent
 
     def run(self):
@@ -372,7 +373,7 @@ class Maze:
                 self._win.destroy()
 
         self.randomMove()
-        self._win.after(2, self.refresh)
+        self._win.after(20, self.refresh)
 
 
 if __name__ == "__main__":
