@@ -358,7 +358,7 @@ class Maze:
         Finally to run the Tkinter Main Loop
         '''
         self.refresh()
-        # self._win.after(100, self.refresh)
+        # self._win.after(1, self.refresh)
         self._win.mainloop()
 
 
@@ -368,11 +368,11 @@ class Maze:
         '''
         if len(self._agents):
             self.label.value=self._agents[0].steps
+            if self._agents[0].x == 1 and self._agents[0].y == 1:
+                self._win.destroy()
 
         self.randomMove()
-        self._win.after(100, self.refresh)
-
-
+        self._win.after(2, self.refresh)
 
 
 if __name__ == "__main__":
