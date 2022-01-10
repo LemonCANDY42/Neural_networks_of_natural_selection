@@ -115,10 +115,11 @@ class Maze:
         self.object_map = npzfile['object_map']
 
     def save_pic(self,dir_path='./img/'):
-        if self.map_fig != None:
-            self.map_fig.savefig(dir_path+f'{datetime.datetime.now()}-map.png', format='png', transparent=True, dpi=300, pad_inches=0)
-        if self.path_fig != None:
-            self.path_fig.savefig(dir_path+f'{datetime.datetime.now()}-path.png', format='png', transparent=True, dpi=300, pad_inches=0)
+
+        self.draw_map()
+        self.map_fig.savefig(dir_path+f'{datetime.datetime.now()}-map.png', format='png', transparent=True, dpi=300, pad_inches=0)
+        self.draw_path()
+        self.path_fig.savefig(dir_path+f'{datetime.datetime.now()}-path.png', format='png', transparent=True, dpi=300, pad_inches=0)
 
     def draw_path(self):
         move_list,attempted_steps = solve_fill(self.rows, self.cols, self.map, object_map=self.object_map)
@@ -340,19 +341,21 @@ if __name__ == "__main__":
     from agent import Agent
     # rows = int(input("Rows: "))
     # cols = int(input("Columns: "))
-    rows = 5
-    cols = 5
-    MG = Maze(num_rows=rows, num_cols=cols, type="twistN",load_file="./MAZE/2022-01-10 18:20:26.823120-(5, 5).npz")
+    rows = 32
+    cols = 32
+    MG = Maze(num_rows=rows, num_cols=cols, type="twist",load_file='./MAZE/2022-01-10 18:56:08.997395-(32, 32).npz')#load_file="./MAZE/2022-01-10 18:20:26.823120-(5, 5).npz"
 
     b = Agent(MG, footprints=True, filled=True,)
     MG.enableArrowKey(b)
     MG.enableWASD(b)
 
     # MG.draw_map()
+    # MG.show()
     # MG.draw_path()
     # MG.show()
-    # MG.save_pic()
 
+    # MG.save_pic()
     # MG.save_maze()
+
     MG.run()
     a = MG.map
