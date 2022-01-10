@@ -335,6 +335,23 @@ class Maze:
         self._win.bind('<w>', a.moveUp)
         self._win.bind('<s>', a.moveDown)
 
+    def enableRandomMove(self, a):
+        '''
+        To control an agent a with keys W,A,S,D
+        '''
+        self._win.bind('<L>', a.moveLeft)
+        self._win.bind('<R>', a.moveRight)
+        self._win.bind('<U>', a.moveUp)
+        self._win.bind('<D>', a.moveDown)
+
+    def randomMove(self):
+        """
+            随机游走
+        :return:
+        :rtype:
+        """
+        action = random.choice(['<L>','<R>','<U>','<D>'])
+        self._win.event_generate(action)  # 发送自定义事件myEvent
 
     def run(self):
         '''
@@ -351,7 +368,11 @@ class Maze:
         '''
         if len(self._agents):
             self.label.value=self._agents[0].steps
+
+        self.randomMove()
         self._win.after(100, self.refresh)
+
+
 
 
 if __name__ == "__main__":
@@ -362,9 +383,10 @@ if __name__ == "__main__":
     cols = 32
     MG = Maze(num_rows=rows, num_cols=cols, type="twist",load_file='./MAZE/2022-01-10 18:56:08.997395-(32, 32).npz')#load_file="./MAZE/2022-01-10 18:20:26.823120-(5, 5).npz"
 
-    b = Agent(MG, footprints=True, filled=True,)
-    MG.enableArrowKey(b)
-    MG.enableWASD(b)
+    a = Agent(MG, footprints=True, filled=True,)
+    MG.enableArrowKey(a)
+    MG.enableWASD(a)
+    MG.enableRandomMove(a)
 
 
     # MG.draw_map()
@@ -376,5 +398,4 @@ if __name__ == "__main__":
     # MG.save_maze()
 
     MG.run()
-    print("总步数:",b.steps)
-    a = MG.map
+    print("总步数:",a.steps)
