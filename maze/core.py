@@ -58,25 +58,37 @@ class Maze:
         _agents-->  A list of aganets on the maze
 
     """
-    def __init__(self,num_rows,num_cols,type):
+    def __init__(self,num_rows,num_cols,type,goal=None,load_file=None):
         self._win=None
         self._canvas=None
+        self.map_fig = None
+        self.path_fig = None
         self._agents = []
 
-        self.rows = num_rows
-        self.cols = num_cols
+        if load_file == None:
+            self.rows = num_rows
+            self.cols = num_cols
 
-        self.shape = (self.rows, self.cols)
-        self.object_map,object_row,object_col = object_generator(self.shape)
-        self._goal = (object_row, object_col)
+            self.shape = (self.rows, self.cols)
+            self.object_map,object_row,object_col = object_generator(self.shape,goal=goal)
+            self._goal = (object_row,object_col)
+
+
+            if type == 'twist':
+                self.build = build_twist
+            else:
+                self.build = build_tortuous
+
+            self.map = self.build(self.rows, self.cols)
+        else:
+            self._load_maze(file_path=load_file)
+            self.rows,self.cols,_state = self.map.shape
+
+            self.shape = (self.rows, self.cols)
+
+            self._goal = (np.where(self.object_map==1)[0][0],np.where(self.object_map==1)[1][0])
 
         self.image = np.zeros((self.rows * 10, self.cols * 10), dtype=np.uint8)
-        if type == 'twist':
-            self.build = build_twist
-        else:
-            self.build = build_tortuous
-
-        self.map = self.build(self.rows, self.cols)
 
         self._create_win()
 
@@ -93,8 +105,20 @@ class Maze:
     def show(self):
         plt.show()
 
-    def save_map(self):
-        self.map_fig.savefig('./img/map.png', format='png', transparent=True, dpi=300, pad_inches=0)
+    def save_maze(self,file_path=None):
+        if file_path==None: file_path=f'./MAZE/{datetime.datetime.now()}-{str(self.shape)}.npz'
+        np.savez_compressed(file_path,map=self.map,object_map=self.object_map)
+
+    def _load_maze(self,file_path):
+        npzfile = np.load(f'{file_path}')
+        self.map = npzfile['map']
+        self.object_map = npzfile['object_map']
+
+    def save_pic(self,dir_path='./img/'):
+        if self.map_fig != None:
+            self.map_fig.savefig(dir_path+f'{datetime.datetime.now()}-map.png', format='png', transparent=True, dpi=300, pad_inches=0)
+        if self.path_fig != None:
+            self.path_fig.savefig(dir_path+f'{datetime.datetime.now()}-path.png', format='png', transparent=True, dpi=300, pad_inches=0)
 
     def draw_path(self):
         move_list,attempted_steps = solve_fill(self.rows, self.cols, self.map, object_map=self.object_map)
@@ -109,9 +133,6 @@ class Maze:
         plt.gca().yaxis.set_major_locator(plt.NullLocator())
         plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
         plt.margins(0, 0)
-
-    def save_path(self):
-        self.path_fig.savefig('./img/path.png', format='png', transparent=True, dpi=300, pad_inches=0)
 
     def draw(self, m, object_map=None):
         """
@@ -308,6 +329,7 @@ class Maze:
         self._win.bind('<w>', a.moveUp)
         self._win.bind('<s>', a.moveDown)
 
+
     def run(self):
         '''
         Finally to run the Tkinter Main Loop
@@ -320,17 +342,17 @@ if __name__ == "__main__":
     # cols = int(input("Columns: "))
     rows = 5
     cols = 5
-    MG = Maze(num_rows=rows, num_cols=cols, type="twistN")
+    MG = Maze(num_rows=rows, num_cols=cols, type="twistN",load_file="./MAZE/2022-01-10 18:20:26.823120-(5, 5).npz")
 
     b = Agent(MG, footprints=True, filled=True,)
     MG.enableArrowKey(b)
     MG.enableWASD(b)
 
-    MG.draw_map()
-    MG.show()
-    MG.draw_path()
-    MG.show()
-    MG.save_map()
-    MG.save_path()
+    # MG.draw_map()
+    # MG.draw_path()
+    # MG.show()
+    # MG.save_pic()
+
+    # MG.save_maze()
     MG.run()
     a = MG.map
