@@ -59,6 +59,7 @@ class Maze:
 
     """
     def __init__(self,num_rows,num_cols,type,goal=None,load_file=None):
+        self.freshFunc=None
         self._win=None
         self._canvas=None
         self.map_fig = None
@@ -91,6 +92,8 @@ class Maze:
         self.image = np.zeros((self.rows * 10, self.cols * 10), dtype=np.uint8)
 
         self._create_win()
+
+        self.label = textLabel(self, 'Total Steps', 0)
 
     def draw_map(self):
         self.draw(self.map,object_map=self.object_map)
@@ -293,6 +296,8 @@ class Maze:
                         if self.map[col][row][3] == 0:
                             l = self._canvas.create_line(y, x + w, y + w, x + w, width=2, fill=theme.value[1], tag='line')
 
+
+
     def _redrawCell(self, x, y, theme):
         '''
         To redraw a cell.
@@ -335,7 +340,19 @@ class Maze:
         '''
         Finally to run the Tkinter Main Loop
         '''
+        self.refresh()
+        # self._win.after(100, self.refresh)
         self._win.mainloop()
+
+
+    def refresh(self):
+        '''
+        refresh window
+        '''
+        if len(self._agents):
+            self.label.value=self._agents[0].steps
+        self._win.after(100, self.refresh)
+
 
 if __name__ == "__main__":
     from agent import Agent
@@ -349,6 +366,7 @@ if __name__ == "__main__":
     MG.enableArrowKey(b)
     MG.enableWASD(b)
 
+
     # MG.draw_map()
     # MG.show()
     # MG.draw_path()
@@ -358,4 +376,5 @@ if __name__ == "__main__":
     # MG.save_maze()
 
     MG.run()
+    print("总步数:",b.steps)
     a = MG.map

@@ -9,7 +9,7 @@ from tkinter import *
 from enum import Enum
 from collections import deque
 from setting import COLOR
-from core import Maze
+from core import Maze,textLabel
 
 
 class Agent:
@@ -20,7 +20,7 @@ class Agent:
 	They can have two shapes (square or arrow)
 	'''
 
-	def __init__(self, parentMaze, y=None, x=None, shape='square', goal=None, filled=False, footprints=False,
+	def __init__(self, parentMaze:Maze, y=None, x=None, shape='square', goal=None, filled=False, footprints=False,
 							 color: COLOR = COLOR.blue):
 		'''
 		parentmaze-->  The maze on which agent is placed.
@@ -45,6 +45,7 @@ class Agent:
 								Tracks the body of the agent (the previous positions of it)
 		'''
 		self._parentMaze = parentMaze
+		self.steps = 0
 		self.color = color
 		if (isinstance(color, str)):
 			if (color in COLOR.__members__):
@@ -218,17 +219,22 @@ class Agent:
 	def moveRight(self, event):
 		if self._parentMaze.map[self.x-1, self.y-1][2] == 1:
 			self.y = self.y + 1
+			self.steps += 1
 
 	def moveLeft(self, event):
 		if self._parentMaze.map[self.x-1, self.y-1][0] == 1:
 			self.y = self.y - 1
+			self.steps += 1
 
 	def moveUp(self, event):
 		if self._parentMaze.map[self.x-1, self.y-1][1] == 1:
 			self.x = self.x - 1
 			self.y = self.y
+			self.steps += 1
 
 	def moveDown(self, event):
 		if self._parentMaze.map[self.x-1, self.y-1][3] == 1:
 			self.x = self.x + 1
 			self.y = self.y
+			self.steps += 1
+
