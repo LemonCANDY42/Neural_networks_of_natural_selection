@@ -67,6 +67,8 @@ class Agent:
 		self.x = x + 1
 		self.y = y + 1
 		self.position = (self.x, self.y)
+		# 是否渲染
+		self.switch_render = True
 
 	@property
 	def x(self):
@@ -83,6 +85,13 @@ class Agent:
 	@y.setter
 	def y(self, newY):
 		self._y = newY
+
+	def render(self):
+		"""
+			渲染
+		:return:
+		:rtype:
+		"""
 		w = self._parentMaze._cell_width
 		x = self.x * w - w + self._parentMaze._LabWidth
 		y = self.y * w - w + self._parentMaze._LabWidth
@@ -220,21 +229,29 @@ class Agent:
 		if self._parentMaze.map[self.x-1, self.y-1][2] == 1:
 			self.y = self.y + 1
 			self.steps += 1
+			if self.switch_render:
+				self.render()
+
 
 	def moveLeft(self, event):
 		if self._parentMaze.map[self.x-1, self.y-1][0] == 1:
 			self.y = self.y - 1
 			self.steps += 1
+			if self.switch_render:
+				self.render()
 
 	def moveUp(self, event):
 		if self._parentMaze.map[self.x-1, self.y-1][1] == 1:
 			self.x = self.x - 1
-			self.y = self.y
+			# self.y = self.y
 			self.steps += 1
+			if self.switch_render:
+				self.render()
 
 	def moveDown(self, event):
 		if self._parentMaze.map[self.x-1, self.y-1][3] == 1:
 			self.x = self.x + 1
-			self.y = self.y
+			# self.y = self.y
 			self.steps += 1
-
+			if self.switch_render:
+				self.render()
