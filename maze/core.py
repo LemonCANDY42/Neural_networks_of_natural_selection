@@ -363,7 +363,6 @@ class Maze:
         # self._win.after(1, self.refresh)
         self._win.mainloop()
 
-
     def refresh(self):
         '''
         refresh window
@@ -388,7 +387,7 @@ if __name__ == "__main__":
     a = Agent(MG, footprints=True, filled=True,)
     MG.enableArrowKey(a)
     MG.enableWASD(a)
-    # MG.enableRandomMove(a)
+    MG.enableRandomMove(a)
     # a.switch_render = False
     contour = Contour(MG.object_map)
     contour.draw()
