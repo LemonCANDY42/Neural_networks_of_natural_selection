@@ -6,6 +6,7 @@
 # @Email    ：l.w.r.f.42@gmail.com
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 class Contour:
 	"""
 		生成等高图
@@ -36,3 +37,19 @@ class Contour:
 		if A>255:
 			return 255
 		return A
+
+	def draw(self):
+		xlist = np.linspace(0,self.map.shape[1], self.map.shape[1])
+		ylist = np.linspace(0,self.map.shape[0], self.map.shape[0])
+		X, Y = np.meshgrid(xlist, ylist)
+		fig,ax=plt.subplots(1,1)
+		cp = ax.contourf(X, Y, self.map)
+		fig.colorbar(cp) # Add a colorbar to a plot
+		ax.set_title('Filled Contours Plot')
+		#ax.set_xlabel('x (cm)')
+		ax.set_ylabel('y ')
+		# ax.invert_xaxis()
+		# x轴放到顶部
+		ax.xaxis.tick_top()
+		ax.invert_yaxis()
+		plt.show()

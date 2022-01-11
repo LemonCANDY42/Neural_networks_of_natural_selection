@@ -391,7 +391,7 @@ if __name__ == "__main__":
     # MG.enableRandomMove(a)
     # a.switch_render = False
     contour = Contour(MG.object_map)
-    contour.map
+    contour.draw()
 
     # MG.draw_map()
     # MG.show()
