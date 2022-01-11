@@ -14,6 +14,7 @@ from analysis.time_tools import time_keep
 from numba import jit
 import random,datetime,csv,os
 from tkinter import *
+from contour import Contour
 
 class textLabel:
     '''
@@ -387,8 +388,10 @@ if __name__ == "__main__":
     a = Agent(MG, footprints=True, filled=True,)
     MG.enableArrowKey(a)
     MG.enableWASD(a)
-    MG.enableRandomMove(a)
-
+    # MG.enableRandomMove(a)
+    # a.switch_render = False
+    contour = Contour(MG.object_map)
+    contour.map
 
     # MG.draw_map()
     # MG.show()
