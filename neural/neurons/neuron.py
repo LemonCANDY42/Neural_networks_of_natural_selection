@@ -4,6 +4,7 @@
 # @FileName: neuron.py
 # @Software: PyCharm
 # @Email    ：l.w.r.f.42@gmail.com
+import numpy as np
 
 from neural.BasicComputingComponents.functions import *
 from enum import Enum, auto
@@ -12,6 +13,7 @@ from numba import int32, float32  # import the types
 from numba.experimental import jitclass
 import random
 
+# np.random.seed(42)
 
 class NeuronType(Enum):
 	RELU = auto()
@@ -25,75 +27,144 @@ class Neuron():
 		zone结构在每次计算遍历到的时候执行
 	"""
 
-	def __init__(self, id, coordinates, type=NeuronType.RELU,create_weight="zero", load_weights=False):
+	def __init__(self, id, coordinates, type=NeuronType.RELU,create_weight="random", load_weights=False):
 		if load_weights:
 			self.id = load_weights['id']
 			self.coordinates = load_weights['coordinates']
-			self.receptive_id_list = load_weights['receptive_id_list']
+			self.receptive_list = load_weights['receptive_id_list']
 			self.output_id_list = load_weights['output_id_list']
 			self.weights = load_weights['weights']
 			self.type = load_weights['type']
 			self.create_weight = load_weights['create_weight']
+			self.weights_shape = load_weights['weights_shape']
+			self.weight = load_weights['weight']
+			self.out_shape = load_weights['out_shape']
+			self.in_shape = load_weights['in_shape']
 		else:
 			self.id = id
 			self.coordinates = coordinates
 			# 树突接受的突触输入id
-			self.receptive_id_list = []
+			self.receptive_list = []
 			# 突触对接的树突输出id
 			self.output_id_list = []
 			self.output_list = []
 			self.weights = {}
+			self.weight = None
 			self.type = type
 			self.create_weight = create_weight
+			self.out_shape = None
+			self.in_shape = None
 
 		# 在下一次计算前接到的输入(按顺序 element: key: id ,value: tensor)
 		self.nerve_signals = []
 		self.trigger = None
+		self.locker = False
+
 
 		if type is NeuronType.RELU:
-			self.simplify_function = relu
+			self.activation_function = relu
 		elif type is NeuronType.SIGMOID:
-			self.simplify_function = sigmoid
+			self.activation_function = sigmoid
 		elif type is NeuronType.SOFTMAX:
-			self.simplify_function = softmax
+			self.activation_function = softmax
 		else:
-			self.simplify_function = relu
+			self.activation_function = relu
 
-	def generate_weight(self):
-		"""初始化生成权重"""
-		if self.create_weight=="random":
-			return random.uniform(-1, 1)
+
+	def broadcast_weight(self,input_shape=None,output_shape=None):
+		"""广播更新权值"""
+		pass
+
+	@property
+	def is_input(self):
+		if len(self.receptive_list) == 1 and self.receptive_list[0] == 0:
+			return True
 		else:
-			return 0
+			return False
+
+	@property
+	def is_output(self):
+		if len(self.output_id_list) == 1 and self.output_id_list[0] == -1:
+			return True
+		else:
+			return False
+
+	def init_weight(self):
+		if not self.is_output:
+			in_shape = len(self.output_id_list)
+		else:
+			in_shape = self.out_shape[-1]
+
+		if self.create_weight == "random":
+			self.weight =  np.random.randn(len(self.output_id_list),in_shape)
+		else:
+			self.weight =  np.zeros((len(self.output_id_list),in_shape))
+
+		for id in self.receptive_list:
+			if isinstance(id, int):
+				if id not in self.weights:
+					self.weights[id] = self.generate_weights(id)
+			else:
+				if id.id not in self.weights:
+					self.weights[id.id] = self.generate_weights(id)
+
+	def generate_weights(self,neuron):
+		"""初始化生成权重"""
+		in_shape = None
+		if isinstance(neuron, int):
+			if neuron == 0:
+				in_shape=self.in_shape[-1]
+		else:
+			if not neuron.is_output:
+				in_shape = len(neuron.output_id_list)
+			else:
+				in_shape = neuron.out_shape[-1]
+
+		if self.create_weight=="random":
+			return np.random.randn(in_shape, len(self.output_id_list))
+		else:
+			# print((in_shape, len(self.output_id_list)))
+			return np.zeros((in_shape, len(self.output_id_list)))
 
 	def receptive_append(self,id):
 		"""添加输入神经元"""
-		if isinstance(id, int):
-			if id not in self.receptive_id_list:
-				self.receptive_id_list.append(id)
-			if id not in self.weights:
-				self.weights[id] = self.generate_weight()
-		elif isinstance(id, Neuron):
-			if id.id not in self.receptive_id_list:
-				self.receptive_id_list.append(id.id)
-			if id.id not in self.weights:
-				self.weights[id.id] = self.generate_weight()
-		else:
-			raise "不适用的参数类型"
+		# if isinstance(id, int):
+		if id not in self.receptive_list:
+			self.receptive_list.append(id)
+				# self.weights[id] = self.generate_weights(id)
+		# 	return
+		# # 	if id not in self.weights:
+		# # 		self.weights[id] = self.generate_weights()
+		# if isinstance(id, Neuron):
+		# 	if id.id not in self.receptive_list:
+		# 		self.receptive_list.append(id.id)
+		# 	# if id.id not in self.weights:
+		# 	# 	self.weights[id.id] = self.generate_weights(id)
+		# else:
+		# 	raise "不适用的参数类型"
 
 	def receptive_remove(self,id):
 		"""移除输入神经元"""
-		if id in self.receptive_id_list:
-			self.receptive_id_list.remove(id)
+		if id in self.receptive_list:
+			self.receptive_list.remove(id)
 		if id not in self.weights:
 			del self.weights[id]
 
 	def output_append(self,neuron):
 		"""添加输出神经元"""
-		if neuron.id not in self.output_id_list:
-			self.output_id_list.append(neuron.id)
-		if neuron not in self.output_list:
-			self.output_list.append(neuron)
+		if isinstance(neuron, int):
+			if neuron == -1:
+				self.output_id_list.append(neuron)
+				self.output_list.append(None)
+			else:
+				raise "output append: 错误的参数"
+		elif isinstance(neuron, Neuron):
+			if neuron.id not in self.output_id_list:
+				self.output_id_list.append(neuron.id)
+			if neuron not in self.output_list:
+				self.output_list.append(neuron)
+		else:
+			raise "output append: 错误的神经元设置"
 
 	def output_remove(self,neuron):
 		"""移除输出神经元"""
@@ -115,7 +186,7 @@ class Neuron():
 		# print("神经元：",self.id,"输入：",id, tensor)
 		self.nerve_signals.append((id, tensor))
 
-	def receptive_zone(self, id, tensor):
+	def receptive_zone(self, neuron, tensor):
 		"""
 		 树突接受信号
 		:param id:
@@ -125,8 +196,8 @@ class Neuron():
 		:return:
 		:rtype:
 		"""
-		if id in self.receptive_id_list:
-			self.dendrites(id, tensor)
+		if neuron in self.receptive_list:
+			self.dendrites(neuron.id, tensor)
 		else:
 			raise "不允许的神经连接"
 
@@ -136,12 +207,19 @@ class Neuron():
 		:return:
 		:rtype:
 		"""
-		Tensor = 0
+		Tensor = None
 		freeze_nerve_signals = self.nerve_signals.copy()
 		for id, _tensor in freeze_nerve_signals:
-			Tensor = self.simplify_function(_tensor, self.weights[id])
-			self.weights[id] = (np.mean(Tensor) - np.std(Tensor) + self.weights[id])/2
-		self.nerve_signals = []
+			# print(f'神经元：{self.id}:',_tensor.shape,self.weights[id].shape,self.weight.shape)
+			tensor = _tensor.dot(self.weights[id]).dot(self.weight)#
+			if Tensor is None:
+				Tensor = tensor
+			else:
+				Tensor += tensor
+		Tensor = self.activation_function(Tensor)
+		# self.weight = (np.mean(Tensor) - np.std(Tensor) + self.weight)/2
+		self.weight = update_weight(self.weight, Tensor)
+		# self.nerve_signals = []
 		self.trigger = Tensor
 		# print("神经元：", self.id, "输出：", Tensor)
 		self.output_zone()
@@ -152,9 +230,12 @@ class Neuron():
 		:return:
 		:rtype:
 		"""
-		if self.output_list:
-			for neuron in self.output_list:
-				neuron.receptive_zone(self.id,self.trigger)
+		if not self.is_output:
+			if self.output_list:
+				for neuron in self.output_list:
+					neuron.receptive_zone(self,self.trigger)
+		else:
+			return
 
 	def __eq__(self, other):
 		"""
@@ -172,12 +253,19 @@ if __name__ == "__main__":
 	n1 = Neuron(id=1, coordinates=(0, 0))
 	n2 = Neuron(id=2, coordinates=(1, 0))
 	n3 = Neuron(id=3, coordinates=(1, 0))
-	n4 = Neuron(id=4, coordinates=(2, 0),type=NeuronType.SIGMOID)
+	n4 = Neuron(id=4, coordinates=(2, 0),type=NeuronType.SOFTMAX)#,type=NeuronType.SIGMOID
+
+	Ns = [n1,n2,n3,n4]
 
 	# warm up
+	# n1.dendrites(0, tensor=input)
+	# n1.trigger_zone()
+	n4.out_shape = (1,)
+	n4.output_append(-1)
+
+	n1.in_shape = input.shape
 	n1.receptive_append(0)
-	n1.dendrites(0, tensor=input)
-	n1.trigger_zone()
+
 
 	n1.output_append(n2)
 	n2.receptive_append(n1)
@@ -194,6 +282,11 @@ if __name__ == "__main__":
 	n2.output_append(n4)
 	n4.receptive_append(n2)
 
+
+
+	for n in Ns:
+		n.init_weight()
+
 	def trigge_neuron(tensor):
 		n1.dendrites(0, tensor=tensor)
 		n1.trigger_zone()
@@ -202,10 +295,13 @@ if __name__ == "__main__":
 		n4.trigger_zone()
 		return n4.trigger
 
+
+	temp = trigge_neuron(input)
+
 	start = time.time()
 	temp = input
-	for i in range(10000):
-		temp = trigge_neuron(temp)
+	for i in range(100):
+		temp = trigge_neuron(input)
 	print("耗时:", time.time() - start)
 
 	print(trigge_neuron(input))

@@ -11,13 +11,13 @@ from numba import cuda
 
 # sigmoid function
 @jit(nopython=True)
-def sigmoid(X,weights=0):
+def sigmoid(X):
 	return 1 / (1 + np.exp(-X))
 
 
 # softmax function
 @jit(nopython=True)
-def softmax(X,weights=0):
+def softmax(X):
 	expo = np.exp(X)
 	expo_sum = np.sum(np.exp(X))
 	return expo / expo_sum
@@ -25,8 +25,12 @@ def softmax(X,weights=0):
 
 # ReLu function
 @jit(nopython=True)
-def relu(X,weights=0):
-	return np.maximum(weights, X)
+def relu(X):
+	return np.maximum(0, X)
+
+@jit(nopython=True)
+def update_weight(W,tensor):
+	return (np.mean(tensor) - np.std(tensor) + W) / 2
 
 
 if __name__ == "__main__":
