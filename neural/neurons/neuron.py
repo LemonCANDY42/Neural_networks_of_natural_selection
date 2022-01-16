@@ -12,8 +12,9 @@ from numba import jit
 from numba import int32, float32  # import the types
 from numba.experimental import jitclass
 import random
+from analysis.time_tools import *
 
-# np.random.seed(42)
+np.random.seed(42)
 
 class NeuronType(Enum):
 	RELU = auto()
@@ -158,17 +159,6 @@ class Neuron():
 		# if isinstance(id, int):
 		if id not in self.receptive_list:
 			self.receptive_list.append(id)
-				# self.weights[id] = self.generate_weights(id)
-		# 	return
-		# # 	if id not in self.weights:
-		# # 		self.weights[id] = self.generate_weights()
-		# if isinstance(id, Neuron):
-		# 	if id.id not in self.receptive_list:
-		# 		self.receptive_list.append(id.id)
-		# 	# if id.id not in self.weights:
-		# 	# 	self.weights[id.id] = self.generate_weights(id)
-		# else:
-		# 	raise "不适用的参数类型"
 
 	def receptive_remove(self,id):
 		"""移除输入神经元"""
@@ -250,7 +240,7 @@ class Neuron():
 		Tensor = self.activation_function(Tensor)
 		# self.weight = (np.mean(Tensor) - np.std(Tensor) + self.weight)/2
 		self.weight = update_weight(self.weight, Tensor)
-		# self.nerve_signals = []
+		self.nerve_signals = []
 		self.trigger = Tensor
 		# print("神经元：", self.id, "输出：", Tensor)
 		self.output_zone()
@@ -279,7 +269,7 @@ class Neuron():
 
 if __name__ == "__main__":
 	import time
-	input = np.random.random((24,24,3))
+	input = np.random.random((224,224,3))
 
 	n1 = Neuron(id=1, coordinates=(0, 0))
 	n2 = Neuron(id=2, coordinates=(1, 0))
@@ -314,11 +304,10 @@ if __name__ == "__main__":
 	n2.output_append(n4)
 	n4.receptive_append(n2)
 
-
-
 	for n in Ns:
 		n.init_weight()
 
+	# @time_keep
 	def trigge_neuron(tensor):
 		n1.dendrites(0, tensor=tensor)
 		n1.trigger_zone()
@@ -332,7 +321,7 @@ if __name__ == "__main__":
 
 	start = time.time()
 	temp = input
-	for i in range(10):
+	for i in range(100):
 		temp = trigge_neuron(input)
 	print("耗时:", time.time() - start)
 
