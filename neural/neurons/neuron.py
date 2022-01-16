@@ -27,7 +27,7 @@ class Neuron():
 		zone结构在每次计算遍历到的时候执行
 	"""
 
-	def __init__(self, id, coordinates, type=NeuronType.RELU,create_weight="random", load_weights=False):
+	def __init__(self, id, coordinates, type=NeuronType.RELU,create_weight="N-d", load_weights=False,full_connections=10):
 		if load_weights:
 			self.id = load_weights['id']
 			self.coordinates = load_weights['coordinates']
@@ -40,6 +40,8 @@ class Neuron():
 			self.weight = load_weights['weight']
 			self.out_shape = load_weights['out_shape']
 			self.in_shape = load_weights['in_shape']
+			self.out_weight = load_weights['out_weight']
+			self.full_connections = load_weights['full_connections']
 		else:
 			self.id = id
 			self.coordinates = coordinates
@@ -54,6 +56,8 @@ class Neuron():
 			self.create_weight = create_weight
 			self.out_shape = None
 			self.in_shape = None
+			self.out_weight = None
+			self.full_connections = full_connections
 
 		# 在下一次计算前接到的输入(按顺序 element: key: id ,value: tensor)
 		self.nerve_signals = []
@@ -70,6 +74,13 @@ class Neuron():
 		else:
 			self.activation_function = relu
 
+	def create_tensor(self,*shape):
+		if self.create_weight == "N-d":
+			return np.random.randn(*shape)
+		elif self.create_weight == "one":
+			return np.ones(shape)
+		else:
+			return np.random.random(shape)
 
 	def broadcast_weight(self,input_shape=None,output_shape=None):
 		"""广播更新权值"""
@@ -89,16 +100,35 @@ class Neuron():
 		else:
 			return False
 
+	def flatten_shape(self,neuron):
+		# flatten
+		size = None
+		if self.in_shape:
+			for i in self.in_shape[:-1]:
+				if size is None:
+					size = i
+				else:
+					size = size * i
+			return size*len(neuron.output_id_list)
+		else:
+			return None
+
 	def init_weight(self):
+
 		if not self.is_output:
 			in_shape = len(self.output_id_list)
 		else:
 			in_shape = self.out_shape[-1]
+			# out_shape = self.out_shape
 
-		if self.create_weight == "random":
-			self.weight =  np.random.randn(len(self.output_id_list),in_shape)
+		if self.is_output:
+			if len(self.out_shape) > 1:
+				self.out_weight = self.create_tensor(*self.out_shape[:-1] ,1)
+			else:
+				self.out_weight = self.create_tensor(1)
+			self.weight = self.create_tensor(self.full_connections,in_shape)
 		else:
-			self.weight =  np.zeros((len(self.output_id_list),in_shape))
+			self.weight = self.create_tensor(len(self.output_id_list), in_shape)
 
 		for id in self.receptive_list:
 			if isinstance(id, int):
@@ -115,16 +145,13 @@ class Neuron():
 			if neuron == 0:
 				in_shape=self.in_shape[-1]
 		else:
-			if not neuron.is_output:
+			if not self.is_output:
 				in_shape = len(neuron.output_id_list)
 			else:
-				in_shape = neuron.out_shape[-1]
+				in_shape = self.flatten_shape(neuron) #neuron.out_shape[-1]
+				return self.create_tensor(in_shape, self.full_connections)
 
-		if self.create_weight=="random":
-			return np.random.randn(in_shape, len(self.output_id_list))
-		else:
-			# print((in_shape, len(self.output_id_list)))
-			return np.zeros((in_shape, len(self.output_id_list)))
+		return self.create_tensor(in_shape, len(self.output_id_list))
 
 	def receptive_append(self,id):
 		"""添加输入神经元"""
@@ -211,7 +238,11 @@ class Neuron():
 		freeze_nerve_signals = self.nerve_signals.copy()
 		for id, _tensor in freeze_nerve_signals:
 			# print(f'神经元：{self.id}:',_tensor.shape,self.weights[id].shape,self.weight.shape)
-			tensor = _tensor.dot(self.weights[id]).dot(self.weight)#
+			if self.is_output:
+				# print(self.out_weight.shape,_tensor.flatten().dot(self.weights[id]).shape,self.weight.shape)
+				tensor = self.out_weight.dot(_tensor.flatten()[np.newaxis,:].dot(self.weights[id]).dot(self.weight))
+			else:
+				tensor = _tensor.dot(self.weights[id]).dot(self.weight)#
 			if Tensor is None:
 				Tensor = tensor
 			else:
@@ -248,7 +279,7 @@ class Neuron():
 
 if __name__ == "__main__":
 	import time
-	input = np.array([[0,1,2,3], [4,5,6,7]])
+	input = np.random.random((24,24,3))
 
 	n1 = Neuron(id=1, coordinates=(0, 0))
 	n2 = Neuron(id=2, coordinates=(1, 0))
@@ -260,7 +291,8 @@ if __name__ == "__main__":
 	# warm up
 	# n1.dendrites(0, tensor=input)
 	# n1.trigger_zone()
-	n4.out_shape = (1,)
+	n4.out_shape = (4,)
+	n4.in_shape = input.shape
 	n4.output_append(-1)
 
 	n1.in_shape = input.shape
@@ -300,8 +332,8 @@ if __name__ == "__main__":
 
 	start = time.time()
 	temp = input
-	for i in range(100):
+	for i in range(10):
 		temp = trigge_neuron(input)
 	print("耗时:", time.time() - start)
 
-	print(trigge_neuron(input))
+	print(trigge_neuron(input))#,input.shape,trigge_neuron(input).shape
