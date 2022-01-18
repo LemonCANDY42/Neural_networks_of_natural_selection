@@ -6,8 +6,6 @@
 # @Email    ：l.w.r.f.42@gmail.com
 import matplotlib.pyplot as plt
 import networkx as nx
-import matplotlib.pyplot as plt
-import networkx as nx
 
 import random
 G = nx.gnp_random_graph(10,0.3)

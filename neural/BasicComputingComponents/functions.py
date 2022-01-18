@@ -32,7 +32,6 @@ def relu(X):
 def update_weight(W,tensor):
 	return (np.mean(tensor) - np.std(tensor) + W) / 2
 
-
 if __name__ == "__main__":
 	mmatrix = np.array([[-2,1, 2, 3], [-2,4, 5, 6]])
 	output = relu(mmatrix)

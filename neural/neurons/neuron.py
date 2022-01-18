@@ -176,6 +176,8 @@ class Neuron():
 			else:
 				raise "output append: 错误的参数"
 		elif isinstance(neuron, Neuron):
+			# if neuron.id<self.id:
+			# 	raise "output append: 不能反向激活神经元！"
 			if neuron.id not in self.output_id_list:
 				self.output_id_list.append(neuron.id)
 			if neuron not in self.output_list:
@@ -213,6 +215,8 @@ class Neuron():
 		:return:
 		:rtype:
 		"""
+		while self.locker:pass
+
 		if neuron in self.receptive_list:
 			self.dendrites(neuron.id, tensor)
 		else:
@@ -224,26 +228,29 @@ class Neuron():
 		:return:
 		:rtype:
 		"""
+		self.locker = True
 		Tensor = None
-		freeze_nerve_signals = self.nerve_signals.copy()
-		for id, _tensor in freeze_nerve_signals:
-			# print(f'神经元：{self.id}:',_tensor.shape,self.weights[id].shape,self.weight.shape)
-			if self.is_output:
-				# print(self.out_weight.shape,_tensor.flatten().dot(self.weights[id]).shape,self.weight.shape)
-				tensor = self.out_weight.dot(_tensor.flatten()[np.newaxis,:].dot(self.weights[id]).dot(self.weight))
-			else:
-				tensor = _tensor.dot(self.weights[id]).dot(self.weight)#
-			if Tensor is None:
-				Tensor = tensor
-			else:
-				Tensor += tensor
-		Tensor = self.activation_function(Tensor)
-		# self.weight = (np.mean(Tensor) - np.std(Tensor) + self.weight)/2
-		self.weight = update_weight(self.weight, Tensor)
-		self.nerve_signals = []
-		self.trigger = Tensor
-		# print("神经元：", self.id, "输出：", Tensor)
-		self.output_zone()
+		# freeze_nerve_signals = self.nerve_signals.copy()
+		if self.nerve_signals:
+			for id, _tensor in self.nerve_signals:
+				# print(f'神经元：{self.id}:',_tensor.shape,self.weights[id].shape,self.weight.shape)
+				if self.is_output:
+					# print(self.out_weight.shape,_tensor.flatten().dot(self.weights[id]).shape,self.weight.shape)
+					tensor = self.out_weight @ (_tensor.ravel()[np.newaxis,:]@self.weights[id]@self.weight)
+				else:
+					tensor = _tensor @ self.weights[id] @ self.weight #
+				if Tensor is None:
+					Tensor = tensor
+				else:
+					Tensor += tensor
+			Tensor = self.activation_function(Tensor)
+			# self.weight = (np.mean(Tensor) - np.std(Tensor) + self.weight)/2
+			self.weight = update_weight(self.weight, Tensor)
+			self.nerve_signals = []
+			self.trigger = Tensor
+			# print("神经元：", self.id, "输出：", Tensor)
+			self.output_zone()
+		self.locker = False
 
 	def output_zone(self):
 		"""
@@ -321,7 +328,7 @@ if __name__ == "__main__":
 
 	start = time.time()
 	temp = input
-	for i in range(100):
+	for i in range(10):
 		temp = trigge_neuron(input)
 	print("耗时:", time.time() - start)
 
