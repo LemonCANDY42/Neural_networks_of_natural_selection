@@ -28,7 +28,7 @@ class Neuron():
 		zone结构在每次计算遍历到的时候执行
 	"""
 
-	def __init__(self, id, coordinates, type=NeuronType.RELU,create_weight="N-d", load_weights=False,full_connections=10):
+	def __init__(self, id, coordinates=None, type=NeuronType.RELU,create_weight="N-d", load_weights=False,full_connections=10):
 		if load_weights:
 			self.id = load_weights['id']
 			self.coordinates = load_weights['coordinates']
@@ -264,6 +264,9 @@ class Neuron():
 					neuron.receptive_zone(self,self.trigger)
 		else:
 			return
+
+	def __hash__(self):
+		return hash(self.id)
 
 	def __eq__(self, other):
 		"""
