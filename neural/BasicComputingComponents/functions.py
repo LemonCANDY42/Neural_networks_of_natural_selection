@@ -17,10 +17,13 @@ def sigmoid(X):
 
 # softmax function
 @jit(nopython=True)
-def softmax(X):
-	expo = np.exp(X)
-	expo_sum = np.sum(np.exp(X))
-	return expo / expo_sum
+def softmax(a):
+	"""Compute the softmax in a numerically stable way."""
+	c = np.max(a)
+	exp_a = np.exp(a - c)
+	sum_exp_a = np.sum(exp_a)
+	y = exp_a / sum_exp_a
+	return y
 
 
 # ReLu function
@@ -30,7 +33,7 @@ def relu(X):
 
 @jit(nopython=True)
 def update_weight(W,tensor):
-	return (np.mean(tensor) - np.std(tensor) + W) / 2
+	return W#(np.mean(tensor) - np.std(tensor) + W) / 2
 
 if __name__ == "__main__":
 	mmatrix = np.array([[-2,1, 2, 3], [-2,4, 5, 6]])

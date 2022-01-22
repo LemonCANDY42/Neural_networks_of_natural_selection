@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2022/1/22 11:26
 # @Author  : Kenny Zhou
-# @FileName: Memory_MiniModule.py
+# @FileName: memory_mini_module.py
 # @Software: PyCharm
 # @Email    ：l.w.r.f.42@gmail.com
 import networkx as nx
 from neural.neurons.neuron import Neuron
-from network_base import NetworkBase
+from neural.network.network_base import NetworkBase
 
 class MemoryMini(NetworkBase):
 	def __init__(self,index=1):
 		super(MemoryMini, self).__init__()
 		self.start_index = index
-		self.indexs = range(index,index+4)
+		self.indexs = list(range(index,index+4))
+		self.description = "记忆网络子模块"
 		self.create_graph()
-		self.init_network()
+		self._build()
 
 	def create_graph(self):
 		for _index,i in enumerate(self.indexs):

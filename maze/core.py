@@ -6,15 +6,15 @@
 # @Email    ：l.w.r.f.42@gmail.com
 import numpy as np
 from matplotlib import pyplot as plt
-from build_laby_func import *
-from setting import COLOR
-from path_searcher import *
+from maze.build_laby_func import *
+from maze.setting import COLOR
+from maze.path_searcher import *
 from orange_object.generator import object_generator
 from analysis.time_tools import time_keep
 from numba import jit
 import random,datetime,csv,os
 from tkinter import *
-from contour import Contour
+from maze.contour import Contour
 
 class textLabel:
     '''
@@ -336,7 +336,7 @@ class Maze:
         self._win.bind('<w>', a.moveUp)
         self._win.bind('<s>', a.moveDown)
 
-    def enableRandomMove(self, a):
+    def enableMove(self, a):
         '''
         To control an agent a with keys W,A,S,D
         '''
@@ -345,20 +345,21 @@ class Maze:
         self._win.bind('U', a.moveUp)
         self._win.bind('D', a.moveDown)
 
-    def randomMove(self):
+    def randomMove(self,action=random.choice(['L','R','U','D'])):
         """
             随机游走
         :return:
         :rtype:
         """
-        action = random.choice(['L','R','U','D'])
+        # action = random.choice(['L','R','U','D'])
         # for action in self.move_list:
         self._win.event_generate(action)  # 发送自定义事件myEvent
 
-    def run(self):
+    def run(self,func=None):
         '''
         Finally to run the Tkinter Main Loop
         '''
+        self.refresh_func = func
         self.refresh()
         # self._win.after(1, self.refresh)
         self._win.mainloop()
@@ -369,10 +370,12 @@ class Maze:
         '''
         if len(self._agents):
             self.label.value=self._agents[0].steps
-            if self._agents[0].x == 1 and self._agents[0].y == 1:
-                self._win.destroy()
+            if self.refresh_func is not None:
+                if self.refresh_func():
+                    self._win.destroy()
+            # if self._agents[0].x == 1 and self._agents[0].y == 1:
+            #     self._win.destroy()
 
-        self.randomMove()
         self._win.after(20, self.refresh)
 
 
@@ -387,7 +390,7 @@ if __name__ == "__main__":
     a = Agent(MG, footprints=True, filled=True,)
     MG.enableArrowKey(a)
     MG.enableWASD(a)
-    MG.enableRandomMove(a)
+    MG.enableMove(a)
     # a.switch_render = False
     contour = Contour(MG.object_map)
     contour.draw()

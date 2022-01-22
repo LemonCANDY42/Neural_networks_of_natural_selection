@@ -8,8 +8,8 @@ import random,datetime,csv,os
 from tkinter import *
 from enum import Enum
 from collections import deque
-from setting import COLOR
-from core import Maze,textLabel
+from maze.setting import COLOR
+from maze.core import Maze,textLabel
 
 
 class Agent:
@@ -62,8 +62,8 @@ class Agent:
 		else:
 			self.goal = goal
 		self._body = []
-		if x is None: x = self.goal[0]
-		if y is None: y = self.goal[1]
+		if x is None: x = 0#self.goal[0]
+		if y is None: y = 0#self.goal[1]
 		self.x = x + 1
 		self.y = y + 1
 		self.position = (self.x, self.y)
@@ -228,7 +228,7 @@ class Agent:
 	def moveRight(self, event):
 		if self._parentMaze.map[self.x-1, self.y-1][2] == 1:
 			self.y = self.y + 1
-			self.steps += 1
+			# self.steps += 1
 			if self.switch_render:
 				self.render()
 
@@ -236,7 +236,7 @@ class Agent:
 	def moveLeft(self, event):
 		if self._parentMaze.map[self.x-1, self.y-1][0] == 1:
 			self.y = self.y - 1
-			self.steps += 1
+			# self.steps += 1
 			if self.switch_render:
 				self.render()
 
@@ -244,7 +244,7 @@ class Agent:
 		if self._parentMaze.map[self.x-1, self.y-1][1] == 1:
 			self.x = self.x - 1
 			# self.y = self.y
-			self.steps += 1
+			# self.steps += 1
 			if self.switch_render:
 				self.render()
 
@@ -252,6 +252,6 @@ class Agent:
 		if self._parentMaze.map[self.x-1, self.y-1][3] == 1:
 			self.x = self.x + 1
 			# self.y = self.y
-			self.steps += 1
+			# self.steps += 1
 			if self.switch_render:
 				self.render()

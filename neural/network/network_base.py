@@ -14,6 +14,9 @@ class NetworkBase:
 	def __init__(self):
 		self.G = nx.DiGraph()
 		self.pos = {}
+		self.description = ""
+		self.indexs = []
+		self.last_index = 0
 
 	def init_network(self):
 		for n in self.G.nodes:
@@ -28,3 +31,7 @@ class NetworkBase:
 	def create_graph(self):
 		#网络创建
 		pass
+
+	def _build(self):
+		self.last_index=self.indexs[-1]
+		self.neurons = list(self.G.nodes)

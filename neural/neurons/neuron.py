@@ -14,7 +14,7 @@ from numba.experimental import jitclass
 import random
 from analysis.time_tools import *
 
-np.random.seed(42)
+# np.random.seed(42)
 
 class NeuronType(Enum):
 	RELU = auto()
@@ -28,7 +28,7 @@ class Neuron():
 		zone结构在每次计算遍历到的时候执行
 	"""
 
-	def __init__(self, id, coordinates=None, type=NeuronType.RELU,create_weight="N-d", load_weights=False,full_connections=10):
+	def __init__(self, id, coordinates=None, type=NeuronType.RELU,create_weight="N-d", load_weights=False,full_connections=10,description=""):
 		if load_weights:
 			self.id = load_weights['id']
 			self.coordinates = load_weights['coordinates']
@@ -43,6 +43,7 @@ class Neuron():
 			self.in_shape = load_weights['in_shape']
 			self.out_weight = load_weights['out_weight']
 			self.full_connections = load_weights['full_connections']
+			self.description = load_weights['description']
 		else:
 			self.id = id
 			self.coordinates = coordinates
@@ -59,6 +60,7 @@ class Neuron():
 			self.in_shape = None
 			self.out_weight = None
 			self.full_connections = full_connections
+			self.description = description
 
 		# 在下一次计算前接到的输入(按顺序 element: key: id ,value: tensor)
 		self.nerve_signals = []
@@ -73,7 +75,7 @@ class Neuron():
 		elif type is NeuronType.SOFTMAX:
 			self.activation_function = softmax
 		else:
-			self.activation_function = relu
+			self.activation_function = softmax
 
 	def create_tensor(self,*shape):
 		if self.create_weight == "N-d":
@@ -240,17 +242,27 @@ class Neuron():
 				else:
 					tensor = _tensor @ self.weights[id] @ self.weight #
 				if Tensor is None:
-					Tensor = tensor
+					Tensor = tensor/len(self.nerve_signals)
 				else:
-					Tensor += tensor
+					Tensor += tensor/len(self.nerve_signals)
+
+			if self.is_output:
+				print("Tensor",Tensor)
+
 			Tensor = self.activation_function(Tensor)
 			# self.weight = (np.mean(Tensor) - np.std(Tensor) + self.weight)/2
+
 			self.weight = update_weight(self.weight, Tensor)
+
 			self.nerve_signals = []
 			self.trigger = Tensor
 			# print("神经元：", self.id, "输出：", Tensor)
 			self.output_zone()
 		self.locker = False
+
+	def punishment(self,factor):
+		self.weight *= factor #(np.std(self.weight)+1)
+		np.random.randn()
 
 	def output_zone(self):
 		"""
@@ -291,11 +303,9 @@ if __name__ == "__main__":
 	# warm up
 	# n1.dendrites(0, tensor=input)
 	# n1.trigger_zone()
-	n4.out_shape = (4,)
-	n4.in_shape = input.shape
+
 	n4.output_append(-1)
 
-	n1.in_shape = input.shape
 	n1.receptive_append(0)
 
 
@@ -313,6 +323,10 @@ if __name__ == "__main__":
 
 	n2.output_append(n4)
 	n4.receptive_append(n2)
+
+	n4.out_shape = (4,)
+	n4.in_shape = input.shape
+	n1.in_shape = input.shape
 
 	for n in Ns:
 		n.init_weight()
